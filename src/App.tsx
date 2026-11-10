@@ -40,6 +40,7 @@ import { TranslatedLibraryView } from './components/TranslatedLibraryView';
 import { GlossaryView } from './components/GlossaryView';
 import { ForumView } from './components/ForumView';
 import { ProfileAndDataView } from './components/ProfileAndDataView';
+import heroForensicImg from './assets/images/hero_forensic_nursing_1794272209242.jpg';
 
 // New v2 storage keys (purges any previous v1 demo/invented users)
 const ACCOUNTS_STORAGE_KEY = 'lexana_forense_accounts_v2';
@@ -574,9 +575,8 @@ export default function App() {
               <div className="lg:col-span-5 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 relative min-h-[240px]">
                 {!heroImgError ? (
                   <img
-                    src="/src/assets/images/hero_forensic_nursing_1794272209242.jpg"
+                    src={heroForensicImg}
                     alt="Mesa de trabajo de enfermería forense clínica con estetoscopio, lámina anatómica, tubos de muestras precintados y cuaderno médico-legal"
-                    referrerPolicy="no-referrer"
                     onError={() => setHeroImgError(true)}
                     className="w-full h-full object-cover"
                   />

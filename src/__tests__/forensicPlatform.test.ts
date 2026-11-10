@@ -138,7 +138,7 @@ describe('LexAna Forense — Pruebas Unitarias de Estabilidad', () => {
     assert.equal(CURRICULUM_MODULES.length, 8);
     assert.equal(INTERACTIVE_EXERCISES.length, 18);
     assert.ok(LIBRARY_TECHNICAL_DOCUMENTS.length >= 5);
-    assert.ok(FORENSIC_GLOSSARY.length >= 20);
+    assert.ok(FORENSIC_GLOSSARY.length >= 60);
     assert.ok(WEEKLY_FORENSIC_UPDATES.length >= 2);
 
     for (const doc of LIBRARY_TECHNICAL_DOCUMENTS) {

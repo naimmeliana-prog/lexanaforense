@@ -84,20 +84,26 @@ export const GlossaryView: React.FC = () => {
       {/* Category & Alphabetical Filter Controls */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-200/70 dark:bg-slate-800 rounded-lg">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
-                selectedCategory === cat
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {cat === 'ALL' ? `Todas las áreas (${FORENSIC_GLOSSARY.length})` : cat}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const count =
+              cat === 'ALL'
+                ? FORENSIC_GLOSSARY.length
+                : FORENSIC_GLOSSARY.filter((t) => t.category === cat).length;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 tabular-nums ${
+                  selectedCategory === cat
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {cat === 'ALL' ? `Todas las áreas (${count})` : `${cat} (${count})`}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
@@ -187,11 +193,28 @@ export const GlossaryView: React.FC = () => {
                   </span>
                 </div>
                 {item.relatedTerms.length > 0 && (
-                  <div>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                     <strong className="text-slate-700 dark:text-slate-300">
                       Conceptos vinculados:
-                    </strong>{' '}
-                    {item.relatedTerms.join(' · ')}
+                    </strong>
+                    {item.relatedTerms.map((rt, idx) => (
+                      <React.Fragment key={rt}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory('ALL');
+                            setSelectedLetter('ALL');
+                            setSearchQuery(rt.split(' (')[0]);
+                          }}
+                          className="text-teal-700 dark:text-teal-400 hover:underline text-left"
+                        >
+                          {rt}
+                        </button>
+                        {idx < item.relatedTerms.length - 1 && (
+                          <span aria-hidden="true">·</span>
+                        )}
+                      </React.Fragment>
+                    ))}
                   </div>
                 )}
               </div>

@@ -14,6 +14,7 @@ import {
 } from '../types/forensic';
 import { CHAIN_OF_CUSTODY_STEPS } from '../data/exercisesData';
 import { estimatePostMortemIntervalHours } from '../services/storageService';
+import diagramCustodyImg from '../assets/images/diagram_chain_custody_1794272208013.jpg';
 
 interface InteractiveLabViewProps {
   exercises: InteractiveExercise[];
@@ -644,9 +645,8 @@ export const InteractiveLabView: React.FC<InteractiveLabViewProps> = ({
             <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 aspect-4/3 relative">
               {!imageError ? (
                 <img
-                  src="/src/assets/images/diagram_chain_custody_1794272208013.jpg"
+                  src={diagramCustodyImg}
                   alt="Kit clínico de recogida de indicios biológicos con hisopos estériles, testigo métrico y bolsas de evidencia"
-                  referrerPolicy="no-referrer"
                   onError={() => setImageError(true)}
                   className="w-full h-full object-cover"
                 />
