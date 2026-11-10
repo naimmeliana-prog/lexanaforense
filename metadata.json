@@ -1,0 +1,6 @@
+{
+  "name": "LexMedica · Enfermería Forense Autodidacta",
+  "description": "Plataforma abierta y gratuita de aprendizaje autodidacta en Enfermería Forense y Ciencias Forenses Clínicas, integrando protocolos de España, Hispanoamérica y estándares internacionales IAFN/SANE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
