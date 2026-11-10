@@ -1,0 +1,53 @@
+name: Actualización Semanal de Material Forense · LexAna Forense
+
+on:
+  schedule:
+    # Se ejecuta automáticamente cada semana (todos los lunes a las 08:00 UTC)
+    - cron: '0 8 * * 1'
+  # También permite ejecutarlo manualmente en cualquier momento desde la pestaña "Actions" de GitHub
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-add-weekly-material:
+    name: Buscar y Añadir Nuevo Material Clínico-Forense
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm install --legacy-peer-deps
+
+      - name: Ejecutar script de búsqueda e incorporación de nuevo material (PubMed / IAFN / INTCF)
+        run: npm run sync:material
+
+      - name: Verificar tipos TypeScript y Pruebas Unitarias tras la actualización
+        run: |
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Comprobar si hay material nuevo y hacer Commit + Push automático
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/weeklyUpdatesData.ts
+          if git diff --staged --quiet; then
+            echo "No se encontraron publicaciones nuevas esta semana."
+          else
+            git commit -m "chore(content): actualización semanal automática de material de enfermería forense"
+            git push
+            echo "Nuevo material añadido y subido a la rama principal (activando redespliegue en Vercel)."
+          fi

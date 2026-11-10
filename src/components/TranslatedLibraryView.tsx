@@ -4,8 +4,10 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardCheck,
+  ExternalLink,
   Globe,
   ListChecks,
+  RefreshCw,
   Search,
   Table,
 } from 'lucide-react';
@@ -14,6 +16,10 @@ import {
   LIBRARY_TECHNICAL_DOCUMENTS,
   LibraryPillarCategory,
 } from '../data/libraryData';
+import {
+  LAST_WEEKLY_SYNC_METADATA,
+  WEEKLY_FORENSIC_UPDATES,
+} from '../data/weeklyUpdatesData';
 
 interface TranslatedLibraryViewProps {
   modules: CurriculumModule[];
@@ -382,7 +388,75 @@ export const TranslatedLibraryView: React.FC<TranslatedLibraryViewProps> = ({
         })}
       </section>
 
-      {/* Section 2: Quick Reference of Module Bilingual Excerpts */}
+      {/* Section 2: Weekly Automated Material Sync (GitHub Actions Cron) */}
+      <section className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-teal-700 dark:text-teal-400">
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>
+                Actualización Semanal Automatizada ({LAST_WEEKLY_SYNC_METADATA.workflowSchedule})
+              </span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+              Boletín Semanal de Evidencia y Nuevas Publicaciones Forenses
+            </h3>
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+            Última comprobación: {LAST_WEEKLY_SYNC_METADATA.lastCheckedIso}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {WEEKLY_FORENSIC_UPDATES.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between space-y-3"
+            >
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="font-mono font-semibold text-teal-700 dark:text-teal-400">
+                    {item.source}
+                  </span>
+                  <span className="font-mono">{item.publicationDate}</span>
+                </div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  {item.titleSpanish}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                  {item.originalTitle} · {item.authorsOrInstitution}
+                </p>
+                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {item.clinicalSummarySpanish}
+                </p>
+                <div className="p-2.5 rounded-lg bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200/70 dark:border-teal-900 text-xs text-slate-800 dark:text-slate-200">
+                  <strong className="font-semibold text-teal-900 dark:text-teal-300">
+                    Directriz Enfermera:
+                  </strong>{' '}
+                  {item.practicalNursingTakeaway}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-[11px] font-mono text-slate-400">
+                  ID: {item.externalId}
+                </span>
+                <a
+                  href={item.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 dark:text-teal-400 hover:underline"
+                >
+                  <span>Consultar fuente oficial</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Section 3: Quick Reference of Module Bilingual Excerpts */}
       <section className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
         <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
           Índice de Citas Bilingües Vinculadas a los 8 Módulos Curriculares

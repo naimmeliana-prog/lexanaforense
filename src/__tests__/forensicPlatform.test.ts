@@ -15,6 +15,7 @@ import { INTERACTIVE_EXERCISES } from '../data/exercisesData';
 import { INITIAL_FORUM_THREADS } from '../data/forumSeedData';
 import { FORENSIC_GLOSSARY } from '../data/glossaryData';
 import { LIBRARY_TECHNICAL_DOCUMENTS } from '../data/libraryData';
+import { WEEKLY_FORENSIC_UPDATES } from '../data/weeklyUpdatesData';
 import { LearningLevelId } from '../types/forensic';
 
 describe('LexAna Forense — Pruebas Unitarias de Estabilidad', () => {
@@ -138,6 +139,7 @@ describe('LexAna Forense — Pruebas Unitarias de Estabilidad', () => {
     assert.equal(INTERACTIVE_EXERCISES.length, 18);
     assert.ok(LIBRARY_TECHNICAL_DOCUMENTS.length >= 5);
     assert.ok(FORENSIC_GLOSSARY.length >= 20);
+    assert.ok(WEEKLY_FORENSIC_UPDATES.length >= 2);
 
     for (const doc of LIBRARY_TECHNICAL_DOCUMENTS) {
       assert.ok(
