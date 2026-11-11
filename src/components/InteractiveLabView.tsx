@@ -3,9 +3,12 @@ import {
   AlertTriangle,
   CheckCircle2,
   ClipboardCheck,
+  Download,
+  Image as ImageIcon,
   RotateCcw,
   ShieldCheck,
   Sliders,
+  Sparkles,
 } from 'lucide-react';
 import {
   ExerciseAttemptRecord,
@@ -15,6 +18,9 @@ import {
 import { CHAIN_OF_CUSTODY_STEPS } from '../data/exercisesData';
 import { estimatePostMortemIntervalHours } from '../services/storageService';
 import diagramCustodyImg from '../assets/images/diagram_chain_custody_1794272208013.jpg';
+import schematicDnaImg from '../assets/images/schematic_custody_dna_swabs_1794280689674.jpg';
+import schematicToxImg from '../assets/images/schematic_custody_toxicology_tubes_1794280693060.jpg';
+import schematicTextileImg from '../assets/images/schematic_custody_textile_evidence_1794280693667.jpg';
 
 interface InteractiveLabViewProps {
   exercises: InteractiveExercise[];
@@ -22,7 +28,192 @@ interface InteractiveLabViewProps {
   onRecordAttempt: (exerciseId: string, selectedOptionId: string, isCorrect: boolean) => void;
 }
 
-type LabMode = 'casos' | 'tanatologia' | 'custodia';
+type LabMode = 'casos' | 'tanatologia' | 'custodia' | 'diagramas';
+
+type SchematicTemplateId =
+  | 'adn_doble_hisopo'
+  | 'toxicologia_sangre_orina'
+  | 'prendas_textiles'
+  | 'kit_integral_urgencias';
+
+interface SchematicTemplateConfig {
+  id: SchematicTemplateId;
+  title: string;
+  subtitle: string;
+  normativeRef: string;
+  imageSrc: string;
+  imageAlt: string;
+  primaryContainer: string;
+  secondaryContainer: string;
+  dryingOrPreservative: string;
+  storageTemp: string;
+  criticalWarning: string;
+  steps: {
+    stepNumber: string;
+    phaseTitle: string;
+    actionSummary: string;
+    technicalSpec: string;
+  }[];
+}
+
+const CUSTODY_SCHEMATIC_TEMPLATES: Record<SchematicTemplateId, SchematicTemplateConfig> = {
+  adn_doble_hisopo: {
+    id: 'adn_doble_hisopo',
+    title: 'Esquema 1 · Muestras Biológicas de ADN (Técnica del Doble Hisopo)',
+    subtitle: 'Saliva en mordeduras, semen, epiteliales de contacto (Touch DNA) y tomas ginecológicas/anorrectales',
+    normativeRef: 'Orden JUS/1291/2010 (Art. 15–19) · CNUFADN · Estándar SANE/IAFN',
+    imageSrc: schematicDnaImg,
+    imageAlt: 'Diagrama esquemático de los 4 pasos de la cadena de custodia en hisopos biológicos de ADN',
+    primaryContainer: 'Cajetín ventilado o tubo de cartón transpirable sin aditivos',
+    secondaryContainer: 'Sobre de papel Kraft transpirable con precinto inviolable',
+    dryingOrPreservative: 'Secado al aire a temperatura ambiente (20–22 °C) durante 30–60 min',
+    storageTemp: 'Temperatura ambiente seca (o refrigeración 2–8 °C una vez seco)',
+    criticalWarning: 'PROHIBIDO introducir hisopos húmedos en fundas de plástico herméticas (proliferación bacteriana y degradación de ADN). Aplicar Azul de Toluidina SIEMPRE DESPUÉS del hisopado.',
+    steps: [
+      {
+        stepNumber: '01',
+        phaseTitle: 'Toma con Doble Hisopo (Sweet)',
+        actionSummary: '1º Hisopo humedecido (1–2 gotas H₂O destilada) rotando 15 s + 2º Hisopo seco recolector.',
+        technicalSpec: 'Guantes libres de polvo cambiados por cada región anatómica',
+      },
+      {
+        stepNumber: '02',
+        phaseTitle: 'Secado al Aire en Gradilla',
+        actionSummary: 'Secado obligatorio a temperatura ambiente lejos de corrientes y fuentes de calor.',
+        technicalSpec: 'Sin exposición solar directa · Sin tapón plástico hermético',
+      },
+      {
+        stepNumber: '03',
+        phaseTitle: 'Embalaje en Papel y Precintado',
+        actionSummary: 'Sobre individual de papel Kraft transpirable + cinta de seguridad inviolable.',
+        technicalSpec: 'Firma indeleble cruzando mitad precinto y mitad papel (sin grapas)',
+      },
+      {
+        stepNumber: '04',
+        phaseTitle: 'Acta de Traspaso al INTCF',
+        actionSummary: 'Registro continuo de fecha, hora exacta, nº de colegiada que entrega y agente/perito receptor.',
+        technicalSpec: 'Acompañar siempre de muestra indubitada bucal de la víctima',
+      },
+    ],
+  },
+  toxicologia_sangre_orina: {
+    id: 'toxicologia_sangre_orina',
+    title: 'Esquema 2 · Sangre Venosa y Orina (Sumisión Química DFSA y Alcoholemia)',
+    subtitle: 'Detección de GHB, benzodiacepinas de diseño, escopolamina, etanol y drogas de abuso',
+    normativeRef: 'Orden JUS/1291/2010 (Capítulo Toxicología) · Guía Metodológica DFSA INTCF / UNODC',
+    imageSrc: schematicToxImg,
+    imageAlt: 'Diagrama esquemático de cadena de custodia en tubos de sangre con tapón gris y orina para toxicología forense',
+    primaryContainer: '2 tubos sangre 5 mL (Tapón Gris NaF/KOx) + 2 tubos orina 20 mL polipropileno',
+    secondaryContainer: 'Contenedor secundario isotermo rígido con absorbente y precinto',
+    dryingOrPreservative: 'Fluoruro Sódico 1–2% + Oxalato Potásico en sangre · Orina sin aditivos',
+    storageTemp: 'Cadena de frío estricta entre 2 °C y 8 °C (congelar orina a -20 °C si demora >72 h)',
+    criticalWarning: 'PROHIBIDO desinfectar la piel con alcohol etílico antes de la venopunción (usar clorhexidina acuosa o suero). Llenar los tubos al 100% sin dejar cámara de aire.',
+    steps: [
+      {
+        stepNumber: '01',
+        phaseTitle: 'Recogida Precoz en Triaje',
+        actionSummary: 'Primera micción inmediata (GHB <12 h) y venopunción con antisepsia acuosa sin alcohol.',
+        technicalSpec: '2 tubos Tapón Gris 5 mL (NaF/KOx) llenos al 100% + 2 tubos orina 20 mL',
+      },
+      {
+        stepNumber: '02',
+        phaseTitle: 'Rotulado y Precintado Individual',
+        actionSummary: 'Etiqueta con código único, fecha/hora exacta de extracción y precinto longitudinal sobre el tapón.',
+        technicalSpec: 'Código de barras forense + firma de la enfermera extractora',
+      },
+      {
+        stepNumber: '03',
+        phaseTitle: 'Custodia en Cadena de Frío',
+        actionSummary: 'Almacenamiento inmediato en nevera clínica bajo llave entre 2 °C y 8 °C.',
+        technicalSpec: 'Inhibe la glucólisis, fermentación post-mortem y esterasas plasmáticas',
+      },
+      {
+        stepNumber: '04',
+        phaseTitle: 'Entrega Refrigerada a Laboratorio',
+        actionSummary: 'Transporte refrigerado al INTCF / IMLCF con acta firmada de cadena de custodia.',
+        technicalSpec: 'Confirmación por GC-MS / LC-MS/MS (no basta el test rápido de urgencias)',
+      },
+    ],
+  },
+  prendas_textiles: {
+    id: 'prendas_textiles',
+    title: 'Esquema 3 · Prendas Textiles, Lencería y Ropa con Vestigios Biológicos',
+    subtitle: 'Preservación de manchas de semen, sangre, saliva, pelos, fibras y partículas traza (Principio de Locard)',
+    normativeRef: 'Orden JUS/1291/2010 · Estándar SAFER Act (NIJ) · Protocolo Delitos Sexuales SNS',
+    imageSrc: schematicTextileImg,
+    imageAlt: 'Diagrama esquemático de preservación de prendas y evidencia textil en bolsas de papel Kraft',
+    primaryContainer: 'Doble sábana de desvestido + hojas de papel blanco limpio intercaladas',
+    secondaryContainer: 'Bolsas individuales de papel Kraft marrón transpirable por cada prenda',
+    dryingOrPreservative: 'Secado completo a temperatura ambiente antes de plegar y embolsar',
+    storageTemp: 'Ambiente seco y protegido de la luz a temperatura controlada',
+    criticalWarning: 'PROHIBIDO meter ropa húmeda en bolsas de plástico cerradas o sacudir las prendas. Si es imprescindible cortar una prenda en reanimación, NO cortar nunca por los desgarros ni por los orificios de bala/arma blanca.',
+    steps: [
+      {
+        stepNumber: '01',
+        phaseTitle: 'Desvestido sobre Doble Sábana',
+        actionSummary: 'Sábana inferior de barrera + sábana superior de papel blanco para recoger pelos y fibras caídas.',
+        technicalSpec: 'Plegar la sábana superior hacia dentro como un sobre para no perder trazas',
+      },
+      {
+        stepNumber: '02',
+        phaseTitle: 'Secado de Manchas Húmedas',
+        actionSummary: 'Extender cada prenda húmeda a temperatura ambiente hasta su secado completo.',
+        technicalSpec: 'Evita el enmohecimiento y la hidrólisis bacteriana del perfil STR',
+      },
+      {
+        stepNumber: '03',
+        phaseTitle: 'Intercalado de Papel y Bolsa Kraft',
+        actionSummary: 'Colocar papel blanco limpio entre pliegues y meter cada prenda en su propia bolsa de papel Kraft.',
+        technicalSpec: 'Una prenda = Una bolsa de papel independiente (nunca mezclar prendas)',
+      },
+      {
+        stepNumber: '04',
+        phaseTitle: 'Precinto Cruzado y Registro',
+        actionSummary: 'Cerrar con cinta adhesiva forense (sin grapas), firmar cruzando el borde y anotar en el acta.',
+        technicalSpec: 'Custodia en armero/taquilla forense hasta recogida por Policía Científica',
+      },
+    ],
+  },
+  kit_integral_urgencias: {
+    id: 'kit_integral_urgencias',
+    title: 'Esquema 4 · Kit Clínico Integral de Urgencias y Fotodocumentación ABFO',
+    subtitle: 'Secuencia completa: Fotografía forense a 90° -> Toma biológica -> Embalaje -> Custodia documental',
+    normativeRef: 'Protocolo Común SNS / Ministerio de Justicia · ABFO No. 2 Photomacrographic Standard',
+    imageSrc: diagramCustodyImg,
+    imageAlt: 'Kit clínico integral de recogida de indicios biológicos con testigo métrico ABFO y sobres de custodia',
+    primaryContainer: 'Kit estandarizado con hisopos estériles, escala métrica ABFO nº 2 y tubos precintables',
+    secondaryContainer: 'Caja/Estuche oficial de remisión al Instituto de Medicina Legal (IMLCF)',
+    dryingOrPreservative: 'Secuencia estricta pre-antisepsia: Fotografiar -> Hisopar -> Curar',
+    storageTemp: 'Según matriz (Ambiente seco para ADN seco / 2–8 °C para fluidos líquidos)',
+    criticalWarning: 'PROHIBIDO limpiar o aplicar antisépticos (povidona yodada, clorhexidina) sobre una mordedura o lesión defensiva antes de fotografiarla con testigo métrico y tomar el doble hisopo.',
+    steps: [
+      {
+        stepNumber: '01',
+        phaseTitle: 'Fijación Fotográfica (ABFO nº 2)',
+        actionSummary: 'Panorámica anatómica + primer plano sin regla + primer plano con testigo métrico en L a 90°.',
+        technicalSpec: 'En el mismo plano de profundidad de la piel y sin tapar la lesión',
+      },
+      {
+        stepNumber: '02',
+        phaseTitle: 'Recogida Pre-Antisepsia',
+        actionSummary: 'Obtención de muestras dubitadas e indubitadas antes de lavar, desbridar o suturar.',
+        technicalSpec: 'Cambio de guantes entre cada toma para garantizar el principio de mismidad',
+      },
+      {
+        stepNumber: '03',
+        phaseTitle: 'Triple Verificación de Sellado',
+        actionSummary: 'Comprobar concordancia entre etiqueta del envase primario, sobre exterior y formulario.',
+        technicalSpec: 'Identificación inequívoca: ID paciente, región anatómica, fecha y hora',
+      },
+      {
+        stepNumber: '04',
+        phaseTitle: 'Trazabilidad Sin Eslabones Vacíos',
+        actionSummary: 'Custodia bajo llave hasta entrega nominal con DNI/TIP y firma de ambos intervinientes.',
+        technicalSpec: 'Garantiza validez probatoria plena en el Juicio Oral (STS Sala 2ª)',
+      },
+    ],
+  },
+};
 
 export const InteractiveLabView: React.FC<InteractiveLabViewProps> = ({
   exercises,
@@ -45,6 +236,18 @@ export const InteractiveLabView: React.FC<InteractiveLabViewProps> = ({
     'hisopo_adn' | 'alcoholemia' | 'sumision_orina'
   >('hisopo_adn');
   const [imageError, setImageError] = useState(false);
+
+  // Schematic Diagram Generator State
+  const [selectedTemplateId, setSelectedTemplateId] =
+    useState<SchematicTemplateId>('adn_doble_hisopo');
+  const [customSampleCode, setCustomSampleCode] = useState<string>('EXP-2026-URG-001');
+  const [customServiceUnit, setCustomServiceUnit] = useState<string>(
+    'Servicio de Urgencias Hospitalarias · Box Triaje Forense'
+  );
+  const [customDestinationLab, setCustomDestinationLab] = useState<string>(
+    'INTCF / Instituto de Medicina Legal y Ciencias Forenses (IMLCF)'
+  );
+  const [activeHighlightedStep, setActiveHighlightedStep] = useState<number>(0);
 
   const categories = useMemo(() => {
     const set = new Set(exercises.map((e) => e.category));
@@ -79,13 +282,61 @@ export const InteractiveLabView: React.FC<InteractiveLabViewProps> = ({
     );
   };
 
+  const currentTemplate = CUSTODY_SCHEMATIC_TEMPLATES[selectedTemplateId];
+
+  const handleDownloadSvgDiagram = () => {
+    const t = currentTemplate;
+    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" width="960" height="440">
+  <rect width="960" height="440" fill="#f8fafc" rx="16" />
+  <rect x="20" y="20" width="920" height="72" fill="#0f766e" rx="10" />
+  <text x="40" y="48" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="bold">LEXANA FORENSE · ESQUEMA OFICIAL DE CADENA DE CUSTODIA EN MUESTRAS BIOLÓGICAS</text>
+  <text x="40" y="72" fill="#ccfbf1" font-family="monospace" font-size="12">${t.title} | Ref: ${customSampleCode} | Origen: ${customServiceUnit}</text>
+
+  ${t.steps
+    .map((s, idx) => {
+      const x = 20 + idx * 232;
+      return `
+  <g transform="translate(${x}, 112)">
+    <rect width="220" height="220" fill="#ffffff" stroke="#0f766e" stroke-width="2" rx="12" />
+    <rect width="220" height="38" fill="#f0fdfa" rx="12" />
+    <text x="16" y="25" fill="#0f766e" font-family="monospace" font-size="13" font-weight="bold">ESLABÓN ${s.stepNumber} · ${s.phaseTitle.slice(0, 22)}</text>
+    <text x="16" y="68" fill="#0f172a" font-family="sans-serif" font-size="12" font-weight="bold">${s.phaseTitle}</text>
+    <text x="16" y="96" fill="#334155" font-family="sans-serif" font-size="11">${s.actionSummary.slice(0, 36)}</text>
+    <text x="16" y="114" fill="#334155" font-family="sans-serif" font-size="11">${s.actionSummary.slice(36, 72)}</text>
+    <text x="16" y="132" fill="#334155" font-family="sans-serif" font-size="11">${s.actionSummary.slice(72, 110)}</text>
+    <line x1="16" y1="154" x2="204" y2="154" stroke="#e2e8f0" stroke-width="1" />
+    <text x="16" y="176" fill="#0f766e" font-family="monospace" font-size="10" font-weight="bold">REQUISITO TÉCNICO:</text>
+    <text x="16" y="194" fill="#475569" font-family="sans-serif" font-size="10">${s.technicalSpec.slice(0, 38)}</text>
+    <text x="16" y="208" fill="#475569" font-family="sans-serif" font-size="10">${s.technicalSpec.slice(38, 76)}</text>
+  </g>`;
+    })
+    .join('\n')}
+
+  <rect x="20" y="350" width="920" height="70" fill="#fff1f2" stroke="#fecdd3" stroke-width="1.5" rx="10" />
+  <text x="36" y="374" fill="#9f1239" font-family="sans-serif" font-size="12" font-weight="bold">ALERTA DE VALIDEZ PROBATORIA (${t.normativeRef}):</text>
+  <text x="36" y="394" fill="#881337" font-family="sans-serif" font-size="11">${t.criticalWarning.slice(0, 125)}</text>
+  <text x="36" y="410" fill="#881337" font-family="monospace" font-size="10">Envase Primario: ${t.primaryContainer} | Conservación: ${t.storageTemp} | Destino: ${customDestinationLab}</text>
+</svg>`;
+
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `esquema-custodia-${selectedTemplateId}-${customSampleCode}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-8">
       {/* Header & Mode Switcher */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
           <p className="text-xs font-medium text-teal-700 dark:text-teal-400">
-            Entrenamiento Práctico Autodidacta · Casos Reales y Simulación Forense
+            Entrenamiento Práctico Autodidacta · Casos Reales, Simulación y Generador de Esquemas Visuales
           </p>
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mt-1">
             Laboratorio Clínico-Forense y Base de Ejercicios
@@ -125,6 +376,18 @@ export const InteractiveLabView: React.FC<InteractiveLabViewProps> = ({
             }`}
           >
             Auditoría Cadena de Custodia
+          </button>
+          <button
+            type="button"
+            onClick={() => setLabMode('diagramas')}
+            className={`px-3.5 py-2 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              labMode === 'diagramas'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-teal-800 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Generador Diagramas Custodia (Imagen)</span>
           </button>
         </div>
       </div>
@@ -721,6 +984,333 @@ export const InteractiveLabView: React.FC<InteractiveLabViewProps> = ({
                   </p>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => setLabMode('diagramas')}
+                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span>Abrir Generador de Diagramas Esquemáticos (Imagen)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODE 4: VISUAL SCHEMATIC DIAGRAM GENERATOR FOR BIOLOGICAL SAMPLES CHAIN OF CUSTODY */}
+      {labMode === 'diagramas' && (
+        <div className="space-y-8">
+          {/* Top Controls & Template Selector */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-teal-700 dark:text-teal-400">
+                  <Sparkles className="w-4 h-4" />
+                  <span>
+                    Referencia Visual Generada con Imagen + Esquema Técnico Vectorial Personalizable
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+                  Generador de Diagramas Esquemáticos de Cadena de Custodia en Muestras Biológicas
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                  Selecciona el tipo de muestra biológica forense para visualizar su lámina esquemática de 4 fases (generada mediante Imagen) y personalizar tu propio diagrama técnico descargable según la Orden JUS/1291/2010 del INTCF y estándares SANE/IAFN.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <a
+                  href={currentTemplate.imageSrc}
+                  download={`lamina-custodia-${selectedTemplateId}.jpg`}
+                  className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Descargar Lámina (.JPG)</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={handleDownloadSvgDiagram}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-teal-700 hover:bg-teal-800 text-white flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Exportar Esquema Personalizado (.SVG)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Biological Sample Matrix Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {(
+                [
+                  {
+                    id: 'adn_doble_hisopo',
+                    badge: 'ADN / SANE',
+                    name: 'Hisopos Biológicos (Doble Hisopo Sweet)',
+                    desc: 'Saliva en mordeduras, semen, tomas vaginales/anales y ADN de contacto',
+                  },
+                  {
+                    id: 'toxicologia_sangre_orina',
+                    badge: 'DFSA / INTCF',
+                    name: 'Sangre (Tapón Gris) y Orina (Sumisión Química)',
+                    desc: 'GHB, benzodiacepinas, escopolamina, alcoholemia y cadena de frío 2–8 °C',
+                  },
+                  {
+                    id: 'prendas_textiles',
+                    badge: 'LOCARD / NIJ',
+                    name: 'Prendas Textiles y Ropa Interior con Trazas',
+                    desc: 'Desvestido en doble sábana, secado al aire y bolsas de papel Kraft',
+                  },
+                  {
+                    id: 'kit_integral_urgencias',
+                    badge: 'ABFO / IMLCF',
+                    name: 'Secuencia Integral en Box de Urgencias',
+                    desc: 'Fotografía ABFO a 90°, toma pre-antisepsia y triple sellado oficial',
+                  },
+                ] as const
+              ).map((item) => {
+                const isSelected = selectedTemplateId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTemplateId(item.id);
+                      setActiveHighlightedStep(0);
+                    }}
+                    className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between space-y-2 ${
+                      isSelected
+                        ? 'bg-teal-50/70 dark:bg-teal-950/40 border-teal-600 dark:border-teal-500 ring-1 ring-teal-600/30'
+                        : 'bg-slate-50/70 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-mono font-bold text-teal-700 dark:text-teal-400">
+                        {item.badge}
+                      </span>
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                        {item.name}
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom Metadata Inputs for the Live Schematic */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div>
+                <label
+                  htmlFor="input-sample-code"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Código de Muestra / Etiqueta de Precinto
+                </label>
+                <input
+                  id="input-sample-code"
+                  type="text"
+                  value={customSampleCode}
+                  onChange={(e) => setCustomSampleCode(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs font-mono text-slate-900 dark:text-slate-100"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="input-service-unit"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Unidad Clínica que Inicia la Custodia
+                </label>
+                <input
+                  id="input-service-unit"
+                  type="text"
+                  value={customServiceUnit}
+                  onChange={(e) => setCustomServiceUnit(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="input-dest-lab"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  Laboratorio Forense Receptor
+                </label>
+                <input
+                  id="input-dest-lab"
+                  type="text"
+                  value={customDestinationLab}
+                  onChange={(e) => setCustomDestinationLab(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-slate-100"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Main Visual Output: Left = Imagen Infographic Plate, Right = Interactive Step-by-Step Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column (7 cols): High-Resolution Imagen Schematic Plate + Live Spanish SVG Flow */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      Lámina Esquemática Ilustrada (Generada con Imagen)
+                    </span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {currentTemplate.title} · {currentTemplate.normativeRef}
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-mono font-semibold text-teal-700 dark:text-teal-400">
+                    {customSampleCode}
+                  </span>
+                </div>
+
+                <div className="bg-slate-100 dark:bg-slate-950 aspect-16/9 relative">
+                  <img
+                    src={currentTemplate.imageSrc}
+                    alt={currentTemplate.imageAlt}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+
+              {/* Interactive Spanish Vector Flow Diagram */}
+              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Diagrama de Flujo Operativo en Español (Haz clic en cada eslabón para inspeccionar)
+                  </h4>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                    Origen: {customServiceUnit}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {currentTemplate.steps.map((st, idx) => {
+                    const isFocused = activeHighlightedStep === idx;
+                    return (
+                      <div
+                        key={st.stepNumber}
+                        onClick={() => setActiveHighlightedStep(idx)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setActiveHighlightedStep(idx);
+                          }
+                        }}
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between space-y-2 ${
+                          isFocused
+                            ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-600 dark:border-teal-400'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-teal-600/50'
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-teal-700 dark:text-teal-400">
+                            <span>FASE {st.stepNumber}</span>
+                            {idx < 3 && <span aria-hidden="true">→</span>}
+                          </div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                            {st.phaseTitle}
+                          </div>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {st.actionSummary}
+                          </p>
+                        </div>
+                        <div className="pt-2 border-t border-slate-200/70 dark:border-slate-800 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                          {st.technicalSpec}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column (5 cols): Technical Specifications Card & Invalidating Error Alert */}
+            <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-5">
+              <div className="space-y-1 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div className="text-xs font-mono font-bold text-teal-700 dark:text-teal-400">
+                  FICHA TÉCNICA DE ENVASADO Y CUSTODIA · {customSampleCode}
+                </div>
+                <h4 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  {currentTemplate.title}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {currentTemplate.subtitle}
+                </p>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <div className="font-bold text-slate-900 dark:text-white">
+                    1. Envase Primario (En contacto con la muestra):
+                  </div>
+                  <p className="text-slate-700 dark:text-slate-300">
+                    {currentTemplate.primaryContainer}
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <div className="font-bold text-slate-900 dark:text-white">
+                    2. Envase Secundario y Precintado:
+                  </div>
+                  <p className="text-slate-700 dark:text-slate-300">
+                    {currentTemplate.secondaryContainer}
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <div className="font-bold text-slate-900 dark:text-white">
+                    3. Secado Previo / Conservante Químico:
+                  </div>
+                  <p className="text-slate-700 dark:text-slate-300">
+                    {currentTemplate.dryingOrPreservative}
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <div className="font-bold text-slate-900 dark:text-white">
+                    4. Rango Térmico y Laboratorio de Destino:
+                  </div>
+                  <p className="text-slate-700 dark:text-slate-300">
+                    {currentTemplate.storageTemp} → <strong>{customDestinationLab}</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Selected Step Deep Dive */}
+              <div className="p-4 rounded-xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900 space-y-1.5 text-xs">
+                <div className="font-mono font-bold text-teal-800 dark:text-teal-300">
+                  DETALLE DEL ESLABÓN SELECCIONADO (FASE{' '}
+                  {currentTemplate.steps[activeHighlightedStep].stepNumber}):
+                </div>
+                <div className="font-bold text-slate-900 dark:text-white text-sm">
+                  {currentTemplate.steps[activeHighlightedStep].phaseTitle}
+                </div>
+                <p className="text-slate-700 dark:text-slate-200 leading-relaxed">
+                  {currentTemplate.steps[activeHighlightedStep].actionSummary}
+                </p>
+                <p className="text-teal-800 dark:text-teal-300 font-mono text-[11px] pt-1">
+                  Estándar: {currentTemplate.steps[activeHighlightedStep].technicalSpec}
+                </p>
+              </div>
+
+              {/* Critical Alert */}
+              <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 space-y-1 text-xs">
+                <div className="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>Error Crítico que Invalida la Prueba ante el Tribunal:</span>
+                </div>
+                <p className="text-rose-900 dark:text-rose-200 leading-relaxed">
+                  {currentTemplate.criticalWarning}
+                </p>
+              </div>
             </div>
           </div>
         </div>
