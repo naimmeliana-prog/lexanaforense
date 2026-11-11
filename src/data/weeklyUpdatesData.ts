@@ -13,7 +13,7 @@ export interface WeeklyForensicUpdate {
 }
 
 export const LAST_WEEKLY_SYNC_METADATA = {
-  lastCheckedIso: "2026-11-11T06:42:46.143Z",
+  lastCheckedIso: "2026-11-11T06:57:15.811Z",
   workflowSchedule: 'Cada lunes a las 08:00 UTC (.github/workflows/weekly-content-sync.yml)',
 };
 
